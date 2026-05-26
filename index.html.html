@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>World Travel Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:Arial,sans-serif;background:#f0f4f8;color:#1a202c;min-height:100vh;}
+header{background:linear-gradient(135deg,#1F3864,#2E75B6);color:#fff;padding:16px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
+header h1{font-size:20px;font-weight:700;}
+header p{font-size:12px;opacity:0.8;margin-top:2px;}
+.globe{font-size:32px;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;position:sticky;top:0;z-index:100;}
+.tab{flex:1;padding:12px 8px;text-align:center;font-size:13px;font-weight:600;color:#718096;cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;}
+.tab.active{color:#1F3864;border-bottom:3px solid #1F3864;}
+.page{display:none;padding:16px;max-width:700px;margin:0 auto;}
+.page.active{display:block;}
+
+/* Cards */
+.card{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.card h3{font-size:15px;font-weight:700;color:#1F3864;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+
+/* Form */
+label{display:block;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:4px;margin-top:10px;}
+input,select,textarea{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;color:#1a202c;background:#fff;outline:none;transition:border 0.2s;}
+input:focus,select:focus,textarea:focus{border-color:#2E75B6;}
+textarea{resize:vertical;min-height:70px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* Search box */
+#pac-container{position:relative;}
+#pac-input{padding-left:36px;}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:18px;color:#718096;}
+
+/* Buttons */
+.btn{display:inline-block;padding:11px 20px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-primary{background:#1F3864;color:#fff;width:100%;margin-top:14px;}
+.btn-primary:hover{background:#2E75B6;}
+.btn-danger{background:#e53e3e;color:#fff;padding:6px 12px;font-size:12px;border-radius:6px;}
+.btn-edit{background:#2E75B6;color:#fff;padding:6px 12px;font-size:12px;border-radius:6px;}
+.btn-sm{padding:6px 14px;font-size:12px;}
+
+/* Summary badges */
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.badge-blue{background:#ebf8ff;color:#1F3864;}
+.badge-green{background:#f0fff4;color:#276749;}
+.badge-orange{background:#fffaf0;color:#c05621;}
+.badge-red{background:#fff5f5;color:#c53030;}
+.badge-purple{background:#faf5ff;color:#553c9a;}
+
+/* Location cards */
+.loc-card{background:#fff;border-radius:12px;padding:16px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border-left:4px solid #2E75B6;}
+.loc-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.loc-name{font-size:16px;font-weight:700;color:#1F3864;}
+.loc-country{font-size:12px;color:#718096;margin-top:2px;}
+.loc-costs{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:10px 0;}
+.cost-item{background:#f7fafc;border-radius:8px;padding:8px;text-align:center;}
+.cost-label{font-size:10px;color:#718096;font-weight:600;text-transform:uppercase;}
+.cost-value{font-size:15px;font-weight:700;color:#1F3864;margin-top:2px;}
+.loc-actions{display:flex;gap:8px;margin-top:10px;}
+.visa-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+.visa-free{background:#f0fff4;color:#276749;}
+.visa-on-arrival{background:#fffaf0;color:#c05621;}
+.visa-required{background:#fff5f5;color:#c53030;}
+.visa-evisa{background:#ebf8ff;color:#2b6cb0;}
+
+/* Stats */
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px;}
+.stat-card{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,0.08);}
+.stat-num{font-size:24px;font-weight:700;color:#1F3864;}
+.stat-lbl{font-size:11px;color:#718096;margin-top:2px;}
+
+/* Map */
+#map{width:100%;height:320px;border-radius:12px;margin-bottom:16px;border:2px solid #e2e8f0;}
+.map-placeholder{width:100%;height:320px;border-radius:12px;background:linear-gradient(135deg,#e8f4fd,#c3dff7);display:flex;flex-direction:column;align-items:center;justify-content:center;border:2px dashed #2E75B6;margin-bottom:16px;}
+
+/* Toast */
+#toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1F3864;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:999;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+
+/* Empty state */
+.empty{text-align:center;padding:40px 20px;color:#718096;}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+
+/* API key banner */
+.api-banner{background:#fffbeb;border:1.5px solid #f6ad55;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#744210;}
+.api-banner strong{display:block;margin-bottom:4px;}
+
+/* Notes */
+.notes-text{font-size:13px;color:#4a5568;background:#f7fafc;padding:8px;border-radius:6px;margin-top:6px;line-height:1.5;}
+
+input[type=number]::-webkit-inner-spin-button{opacity:1;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="globe">🌍</div>
+  <div>
+    <h1>World Travel Planner</h1>
+    <p>Track destinations, costs & visa info</p>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('add')">➕ Add Location</div>
+  <div class="tab" onclick="showTab('list')">📋 My Locations</div>
+  <div class="tab" onclick="showTab('map')">🗺️ Map View</div>
+  <div class="tab" onclick="showTab('summary')">📊 Summary</div>
+</div>
+
+<!-- ══════════ TAB 1: ADD LOCATION ══════════ -->
+<div class="page active" id="page-add">
+
+  <div class="api-banner">
+    <strong>🔑 Google Maps Setup (one-time)</strong>
+    To enable live map search: get a free API key from <strong>console.cloud.google.com</strong> → Enable "Maps JavaScript API" & "Places API" → paste it below.
+    <input type="text" id="api-key-input" placeholder="Paste your Google Maps API key here..." style="margin-top:8px;font-size:12px;" />
+    <button class="btn btn-primary" style="width:auto;padding:8px 16px;margin-top:8px;font-size:12px;" onclick="loadGoogleMaps()">Activate Maps</button>
+  </div>
+
+  <div class="card">
+    <h3>📍 Search Location</h3>
+    <div id="pac-container" style="position:relative;">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="pac-input" placeholder="Search city or country (e.g. Paris, France)" />
+    </div>
+    <p id="maps-status" style="font-size:11px;color:#718096;margin-top:6px;">Enter API key above to enable live search, or type manually below.</p>
+    <div id="map-mini" style="display:none;height:200px;border-radius:8px;margin-top:12px;"></div>
+  </div>
+
+  <div class="card">
+    <h3>🌐 Location Details</h3>
+    <div class="row2">
+      <div><label>City / Place *</label><input type="text" id="f-city" placeholder="e.g. Dubai"/></div>
+      <div><label>Country *</label><input type="text" id="f-country" placeholder="e.g. UAE"/></div>
+    </div>
+    <div class="row2">
+      <div><label>Region / Continent</label>
+        <select id="f-region">
+          <option value="">Select...</option>
+          <option>Middle East</option><option>Europe</option><option>Asia</option>
+          <option>North America</option><option>South America</option>
+          <option>Africa</option><option>Oceania</option>
+        </select>
+      </div>
+      <div><label>Best Travel Month</label>
+        <select id="f-month">
+          <option value="">Any</option>
+          <option>January</option><option>February</option><option>March</option>
+          <option>April</option><option>May</option><option>June</option>
+          <option>July</option><option>August</option><option>September</option>
+          <option>October</option><option>November</option><option>December</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>✈️ Flight Details</h3>
+    <div class="row3">
+      <div><label>From (Airport)</label><input type="text" id="f-from" placeholder="e.g. BAH"/></div>
+      <div><label>Flight Duration</label><input type="text" id="f-duration" placeholder="e.g. 3h 30m"/></div>
+      <div><label>Airline</label><input type="text" id="f-airline" placeholder="e.g. Emirates"/></div>
+    </div>
+    <div class="row2">
+      <div><label>One-Way Ticket (BD)</label><input type="number" id="f-ticket-one" placeholder="0.000" step="0.001"/></div>
+      <div><label>Return Ticket (BD)</label><input type="number" id="f-ticket-return" placeholder="0.000" step="0.001"/></div>
+    </div>
+    <div class="row2">
+      <div><label>Ticket Class</label>
+        <select id="f-class">
+          <option>Economy</option><option>Business</option><option>First Class</option>
+        </select>
+      </div>
+      <div><label>Approx. Travel Days</label><input type="number" id="f-days" placeholder="e.g. 7"/></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🛂 Visa Information</h3>
+    <div class="row2">
+      <div><label>Visa Type</label>
+        <select id="f-visa-type">
+          <option value="">Select...</option>
+          <option>Visa Free</option>
+          <option>Visa on Arrival</option>
+          <option>eVisa</option>
+          <option>Embassy Visa Required</option>
+          <option>Not Available</option>
+        </select>
+      </div>
+      <div><label>Visa Cost (BD)</label><input type="number" id="f-visa-cost" placeholder="0.000" step="0.001"/></div>
+    </div>
+    <div class="row2">
+      <div><label>Visa Validity</label><input type="text" id="f-visa-validity" placeholder="e.g. 30 days / 1 year"/></div>
+      <div><label>Processing Time</label><input type="text" id="f-visa-processing" placeholder="e.g. 3-5 working days"/></div>
+    </div>
+    <label>Visa Requirements / Notes</label>
+    <textarea id="f-visa-notes" placeholder="e.g. Passport valid 6 months, bank statement, hotel booking..."></textarea>
+  </div>
+
+  <div class="card">
+    <h3>🏨 Accommodation & Daily Costs</h3>
+    <div class="row2">
+      <div><label>Hotel/Night (BD)</label><input type="number" id="f-hotel" placeholder="0.000" step="0.001"/></div>
+      <div><label>Daily Food Budget (BD)</label><input type="number" id="f-food" placeholder="0.000" step="0.001"/></div>
+    </div>
+    <div class="row2">
+      <div><label>Local Transport/Day (BD)</label><input type="number" id="f-transport" placeholder="0.000" step="0.001"/></div>
+      <div><label>Other Costs (BD)</label><input type="number" id="f-other" placeholder="0.000" step="0.001"/></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📝 Additional Notes</h3>
+    <div class="row2">
+      <div><label>Currency</label><input type="text" id="f-currency" placeholder="e.g. AED, USD, EUR"/></div>
+      <div><label>Status</label>
+        <select id="f-status">
+          <option>Wishlist</option><option>Planning</option><option>Booked</option><option>Visited</option>
+        </select>
+      </div>
+    </div>
+    <label>Travel Notes</label>
+    <textarea id="f-notes" placeholder="Things to do, attractions, tips, personal remarks..."></textarea>
+    <input type="hidden" id="f-lat"/>
+    <input type="hidden" id="f-lng"/>
+    <input type="hidden" id="edit-id"/>
+    <button class="btn btn-primary" onclick="saveLocation()">💾 Save Location</button>
+  </div>
+</div>
+
+<!-- ══════════ TAB 2: MY LOCATIONS ══════════ -->
+<div class="page" id="page-list">
+  <div style="display:flex;gap:8px;margin-bottom:14px;">
+    <input type="text" id="search-filter" placeholder="🔍 Search city or country..." oninput="renderList()" style="flex:1;"/>
+    <select id="status-filter" onchange="renderList()" style="width:130px;">
+      <option value="">All Status</option>
+      <option>Wishlist</option><option>Planning</option><option>Booked</option><option>Visited</option>
+    </select>
+  </div>
+  <div id="locations-list"></div>
+</div>
+
+<!-- ══════════ TAB 3: MAP VIEW ══════════ -->
+<div class="page" id="page-map">
+  <div class="card" style="padding:12px;">
+    <h3>🗺️ All Saved Locations</h3>
+    <p style="font-size:12px;color:#718096;margin-bottom:10px;">Map requires Google Maps API key (enter in Add Location tab)</p>
+  </div>
+  <div id="full-map" style="width:100%;height:420px;border-radius:12px;border:2px solid #e2e8f0;background:linear-gradient(135deg,#e8f4fd,#c3dff7);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+    <div style="font-size:48px;margin-bottom:12px;">🌍</div>
+    <p style="color:#2E75B6;font-weight:600;">Map loads after API key is activated</p>
+    <p style="font-size:12px;color:#718096;margin-top:6px;">Your saved locations will appear as pins</p>
+  </div>
+  <div id="map-location-list" style="margin-top:14px;"></div>
+</div>
+
+<!-- ══════════ TAB 4: SUMMARY ══════════ -->
+<div class="page" id="page-summary">
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="card">
+    <h3>💰 Cost Comparison</h3>
+    <div id="cost-comparison"></div>
+  </div>
+  <div class="card">
+    <h3>🛂 Visa Overview</h3>
+    <div id="visa-overview"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let locations = JSON.parse(localStorage.getItem('travelLocations') || '[]');
+let map, markers = [], autocomplete, mapsLoaded = false;
+
+function showTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const tabs = ['add','list','map','summary'];
+  document.querySelectorAll('.tab')[tabs.indexOf(tab)].classList.add('active');
+  document.getElementById('page-'+tab).classList.add('active');
+  if(tab==='list') renderList();
+  if(tab==='summary') renderSummary();
+  if(tab==='map') renderMapLocations();
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+function loadGoogleMaps() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if(!key) { toast('Please paste your API key first!'); return; }
+  localStorage.setItem('gmapsKey', key);
+  const s = document.createElement('script');
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&callback=initMaps`;
+  s.async = true; s.defer = true;
+  document.head.appendChild(s);
+  document.getElementById('maps-status').textContent = 'Loading Google Maps...';
+}
+
+window.initMaps = function() {
+  mapsLoaded = true;
+  document.getElementById('maps-status').textContent = '✅ Google Maps activated! Type in the search box above.';
+  document.getElementById('map-mini').style.display = 'block';
+
+  const miniMap = new google.maps.Map(document.getElementById('map-mini'), {
+    center: {lat: 26.0667, lng: 50.5577}, zoom: 5,
+    mapTypeControl: false, streetViewControl: false
+  });
+
+  autocomplete = new google.maps.places.Autocomplete(document.getElementById('pac-input'), {types:['(cities)']});
+  autocomplete.addListener('place_changed', () => {
+    const place = autocomplete.getPlace();
+    if(!place.geometry) return;
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+    document.getElementById('f-lat').value = lat;
+    document.getElementById('f-lng').value = lng;
+    miniMap.setCenter({lat, lng});
+    miniMap.setZoom(10);
+    new google.maps.Marker({position:{lat,lng}, map: miniMap});
+
+    const comps = place.address_components || [];
+    let city = '', country = '';
+    comps.forEach(c => {
+      if(c.types.includes('locality')) city = c.long_name;
+      if(c.types.includes('country')) country = c.long_name;
+    });
+    if(!city) city = place.name;
+    document.getElementById('f-city').value = city;
+    document.getElementById('f-country').value = country;
+  });
+
+  const fullMapEl = document.getElementById('full-map');
+  fullMapEl.innerHTML = '';
+  fullMapEl.style.background = '';
+  fullMapEl.style.display = 'block';
+  map = new google.maps.Map(fullMapEl, {
+    center: {lat: 25, lng: 45}, zoom: 3,
+    mapTypeControl: false
+  });
+  renderMapPins();
+}
+
+function renderMapPins() {
+  if(!mapsLoaded || !map) return;
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+  locations.forEach(loc => {
+    if(loc.lat && loc.lng) {
+      const m = new google.maps.Marker({
+        position: {lat: parseFloat(loc.lat), lng: parseFloat(loc.lng)},
+        map, title: `${loc.city}, ${loc.country}`
+      });
+      const iw = new google.maps.InfoWindow({
+        content: `<div style="font-family:Arial;padding:4px;">
+          <strong>${loc.city}, ${loc.country}</strong><br/>
+          <span style="color:#2E75B6;">✈️ BD ${loc.ticketReturn || loc.ticketOne || '—'}</span><br/>
+          <span>🛂 ${loc.visaType || '—'}</span>
+        </div>`
+      });
+      m.addListener('click', () => iw.open(map, m));
+      markers.push(m);
+    }
+  });
+}
+
+function saveLocation() {
+  const city = document.getElementById('f-city').value.trim();
+  const country = document.getElementById('f-country').value.trim();
+  if(!city || !country) { toast('Please enter city and country!'); return; }
+
+  const editId = document.getElementById('edit-id').value;
+  const totalPerDay = (parseFloat(document.getElementById('f-hotel').value)||0) +
+                      (parseFloat(document.getElementById('f-food').value)||0) +
+                      (parseFloat(document.getElementById('f-transport').value)||0);
+  const days = parseInt(document.getElementById('f-days').value)||0;
+  const totalTrip = (parseFloat(document.getElementById('f-ticket-return').value)||0) +
+                    (parseFloat(document.getElementById('f-visa-cost').value)||0) +
+                    (totalPerDay * days) +
+                    (parseFloat(document.getElementById('f-other').value)||0);
+
+  const loc = {
+    id: editId || Date.now().toString(),
+    city, country,
+    region: document.getElementById('f-region').value,
+    month: document.getElementById('f-month').value,
+    from: document.getElementById('f-from').value,
+    duration: document.getElementById('f-duration').value,
+    airline: document.getElementById('f-airline').value,
+    ticketOne: document.getElementById('f-ticket-one').value,
+    ticketReturn: document.getElementById('f-ticket-return').value,
+    ticketClass: document.getElementById('f-class').value,
+    days: days,
+    visaType: document.getElementById('f-visa-type').value,
+    visaCost: document.getElementById('f-visa-cost').value,
+    visaValidity: document.getElementById('f-visa-validity').value,
+    visaProcessing: document.getElementById('f-visa-processing').value,
+    visaNotes: document.getElementById('f-visa-notes').value,
+    hotel: document.getElementById('f-hotel').value,
+    food: document.getElementById('f-food').value,
+    transport: document.getElementById('f-transport').value,
+    other: document.getElementById('f-other').value,
+    currency: document.getElementById('f-currency').value,
+    status: document.getElementById('f-status').value,
+    notes: document.getElementById('f-notes').value,
+    lat: document.getElementById('f-lat').value,
+    lng: document.getElementById('f-lng').value,
+    totalPerDay: totalPerDay.toFixed(3),
+    totalTrip: totalTrip.toFixed(3),
+    savedOn: new Date().toLocaleDateString()
+  };
+
+  if(editId) {
+    const idx = locations.findIndex(l => l.id === editId);
+    if(idx > -1) locations[idx] = loc;
+  } else {
+    locations.push(loc);
+  }
+
+  localStorage.setItem('travelLocations', JSON.stringify(locations));
+  toast(editId ? '✅ Location updated!' : '✅ Location saved!');
+  clearForm();
+  renderMapPins();
+}
+
+function clearForm() {
+  ['f-city','f-country','f-region','f-month','f-from','f-duration','f-airline',
+   'f-ticket-one','f-ticket-return','f-class','f-days','f-visa-type','f-visa-cost',
+   'f-visa-validity','f-visa-processing','f-visa-notes','f-hotel','f-food',
+   'f-transport','f-other','f-currency','f-status','f-notes','f-lat','f-lng','edit-id','pac-input']
+  .forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+}
+
+function editLocation(id) {
+  const loc = locations.find(l => l.id === id);
+  if(!loc) return;
+  showTab('add');
+  Object.entries({
+    'f-city': loc.city, 'f-country': loc.country, 'f-region': loc.region,
+    'f-month': loc.month, 'f-from': loc.from, 'f-duration': loc.duration,
+    'f-airline': loc.airline, 'f-ticket-one': loc.ticketOne, 'f-ticket-return': loc.ticketReturn,
+    'f-class': loc.ticketClass, 'f-days': loc.days, 'f-visa-type': loc.visaType,
+    'f-visa-cost': loc.visaCost, 'f-visa-validity': loc.visaValidity,
+    'f-visa-processing': loc.visaProcessing, 'f-visa-notes': loc.visaNotes,
+    'f-hotel': loc.hotel, 'f-food': loc.food, 'f-transport': loc.transport,
+    'f-other': loc.other, 'f-currency': loc.currency, 'f-status': loc.status,
+    'f-notes': loc.notes, 'f-lat': loc.lat, 'f-lng': loc.lng, 'edit-id': loc.id
+  }).forEach(([k,v]) => { const el = document.getElementById(k); if(el) el.value = v||''; });
+  window.scrollTo(0,0);
+}
+
+function deleteLocation(id) {
+  if(!confirm('Delete this location?')) return;
+  locations = locations.filter(l => l.id !== id);
+  localStorage.setItem('travelLocations', JSON.stringify(locations));
+  renderList();
+  renderMapPins();
+  toast('🗑️ Location deleted');
+}
+
+function visaBadgeClass(type) {
+  if(!type) return '';
+  if(type === 'Visa Free') return 'visa-free';
+  if(type === 'Visa on Arrival') return 'visa-on-arrival';
+  if(type === 'eVisa') return 'visa-evisa';
+  return 'visa-required';
+}
+
+function statusColor(s) {
+  const m = {Wishlist:'#805ad5', Planning:'#d69e2e', Booked:'#2E75B6', Visited:'#38a169'};
+  return m[s] || '#718096';
+}
+
+function renderList() {
+  const q = (document.getElementById('search-filter').value||'').toLowerCase();
+  const sf = document.getElementById('status-filter').value;
+  const el = document.getElementById('locations-list');
+  let filtered = locations.filter(l =>
+    (!q || l.city.toLowerCase().includes(q) || l.country.toLowerCase().includes(q)) &&
+    (!sf || l.status === sf)
+  );
+  if(!filtered.length) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">🌍</div><p>No locations found.</p><p style="font-size:12px;margin-top:6px;">Add your first destination!</p></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(loc => `
+    <div class="loc-card">
+      <div class="loc-header">
+        <div>
+          <div class="loc-name">🏙️ ${loc.city}</div>
+          <div class="loc-country">🌐 ${loc.country} ${loc.region ? '· '+loc.region : ''}</div>
+          <span style="display:inline-block;margin-top:4px;font-size:11px;padding:2px 10px;border-radius:20px;background:${statusColor(loc.status)}22;color:${statusColor(loc.status)};font-weight:600;">${loc.status || 'Wishlist'}</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#718096;">Total Est.</div>
+          <div style="font-size:18px;font-weight:700;color:#1F3864;">BD ${parseFloat(loc.totalTrip||0).toFixed(3)}</div>
+          <div style="font-size:10px;color:#718096;">${loc.days ? loc.days+' days' : ''}</div>
+        </div>
+      </div>
+      <div class="loc-costs">
+        <div class="cost-item">
+          <div class="cost-label">✈️ Return Ticket</div>
+          <div class="cost-value">BD ${parseFloat(loc.ticketReturn||0).toFixed(3)}</div>
+          <div style="font-size:10px;color:#718096;">${loc.ticketClass||''} ${loc.airline ? '· '+loc.airline : ''}</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">🛂 Visa Cost</div>
+          <div class="cost-value">BD ${parseFloat(loc.visaCost||0).toFixed(3)}</div>
+          <div style="font-size:10px;" class="visa-badge ${visaBadgeClass(loc.visaType)}">${loc.visaType||'—'}</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">🏨 Hotel/Night</div>
+          <div class="cost-value">BD ${parseFloat(loc.hotel||0).toFixed(3)}</div>
+        </div>
+        <div class="cost-item">
+          <div class="cost-label">📅 Daily Budget</div>
+          <div class="cost-value">BD ${parseFloat(loc.totalPerDay||0).toFixed(3)}</div>
+          <div style="font-size:10px;color:#718096;">food+transport</div>
+        </div>
+      </div>
+      ${loc.duration ? `<div style="font-size:12px;color:#718096;margin-bottom:6px;">⏱️ Flight: ${loc.duration} ${loc.from ? 'from '+loc.from : ''} ${loc.month ? '| Best month: '+loc.month : ''}</div>` : ''}
+      ${loc.visaValidity ? `<div style="font-size:12px;color:#718096;margin-bottom:6px;">📋 Visa: ${loc.visaValidity} validity · ${loc.visaProcessing||''}</div>` : ''}
+      ${loc.notes ? `<div class="notes-text">📝 ${loc.notes}</div>` : ''}
+      <div class="loc-actions">
+        <button class="btn btn-edit" onclick="editLocation('${loc.id}')">✏️ Edit</button>
+        <button class="btn btn-danger" onclick="deleteLocation('${loc.id}')">🗑️ Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderMapLocations() {
+  const el = document.getElementById('map-location-list');
+  if(!locations.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div style="font-size:13px;font-weight:600;color:#1F3864;margin-bottom:8px;">📍 ${locations.length} saved location${locations.length>1?'s':''}</div>` +
+    locations.map(loc => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fff;border-radius:8px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,0.07);">
+        <div>
+          <span style="font-weight:600;font-size:14px;">${loc.city}, ${loc.country}</span>
+          <span style="font-size:11px;color:#718096;margin-left:8px;">${loc.lat&&loc.lng ? '📌 '+parseFloat(loc.lat).toFixed(2)+', '+parseFloat(loc.lng).toFixed(2) : '📌 No coordinates'}</span>
+        </div>
+        <span style="font-size:13px;font-weight:700;color:#1F3864;">BD ${parseFloat(loc.totalTrip||0).toFixed(3)}</span>
+      </div>
+    `).join('');
+}
+
+function renderSummary() {
+  const total = locations.reduce((s,l) => s + parseFloat(l.totalTrip||0), 0);
+  const visited = locations.filter(l => l.status==='Visited').length;
+  const booked = locations.filter(l => l.status==='Booked').length;
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${locations.length}</div><div class="stat-lbl">Total Locations</div></div>
+    <div class="stat-card"><div class="stat-num">BD ${total.toFixed(3)}</div><div class="stat-lbl">Total Est. Cost</div></div>
+    <div class="stat-card"><div class="stat-num">${visited}</div><div class="stat-lbl">Visited</div></div>
+    <div class="stat-card"><div class="stat-num">${booked}</div><div class="stat-lbl">Booked</div></div>
+  `;
+
+  const sorted = [...locations].sort((a,b) => parseFloat(b.totalTrip||0)-parseFloat(a.totalTrip||0));
+  document.getElementById('cost-comparison').innerHTML = !sorted.length
+    ? '<p style="color:#718096;font-size:13px;">No locations yet.</p>'
+    : sorted.map(loc => {
+        const pct = total > 0 ? (parseFloat(loc.totalTrip||0)/total*100).toFixed(0) : 0;
+        return `<div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;">
+            <span style="font-weight:600;">${loc.city}, ${loc.country}</span>
+            <span style="color:#1F3864;font-weight:700;">BD ${parseFloat(loc.totalTrip||0).toFixed(3)}</span>
+          </div>
+          <div style="background:#e2e8f0;border-radius:20px;height:8px;">
+            <div style="background:#2E75B6;height:8px;border-radius:20px;width:${pct}%;transition:width 0.5s;"></div>
+          </div>
+          <div style="font-size:11px;color:#718096;margin-top:2px;">${pct}% of total | ${loc.days||0} days | ${loc.status||'Wishlist'}</div>
+        </div>`;
+      }).join('');
+
+  const visaCounts = {};
+  locations.forEach(l => { const v = l.visaType||'Not Set'; visaCounts[v] = (visaCounts[v]||0)+1; });
+  document.getElementById('visa-overview').innerHTML = !locations.length
+    ? '<p style="color:#718096;font-size:13px;">No locations yet.</p>'
+    : Object.entries(visaCounts).map(([type, count]) =>
+        `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid #e2e8f0;">
+          <span class="visa-badge ${visaBadgeClass(type)}" style="font-size:12px;">${type}</span>
+          <span style="font-weight:700;color:#1F3864;">${count} destination${count>1?'s':''}</span>
+        </div>`
+      ).join('');
+}
+
+// Restore API key
+const savedKey = localStorage.getItem('gmapsKey');
+if(savedKey) document.getElementById('api-key-input').value = savedKey;
+
+renderList();
+</script>
+</body>
+</html>
